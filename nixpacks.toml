@@ -1,0 +1,3 @@
+[project]
+[project.backend]
+path = "backend"
