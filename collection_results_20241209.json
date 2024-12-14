@@ -1,0 +1,17 @@
+{
+  "successful": [
+    "movies",
+    "television",
+    "gaming",
+    "music",
+    "funny",
+    "sacramento",
+    "seattle",
+    "vancouver",
+    "denver",
+    "austin"
+  ],
+  "failed": [],
+  "start_time": "2024-12-09T20:34:04.288408",
+  "end_time": "2024-12-09T20:39:11.406967"
+}

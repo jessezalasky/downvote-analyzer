@@ -1,0 +1,12 @@
+{
+  "successful": [
+    "movies",
+    "television",
+    "gaming",
+    "music",
+    "funny"
+  ],
+  "failed": [],
+  "start_time": "2024-12-08T23:37:24.932526",
+  "end_time": "2024-12-08T23:40:40.774073"
+}

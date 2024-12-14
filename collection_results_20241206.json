@@ -1,0 +1,17 @@
+{
+  "successful": [
+    "movies",
+    "television",
+    "gaming",
+    "music",
+    "funny",
+    "nba",
+    "nfl",
+    "nhl",
+    "baseball",
+    "formula1"
+  ],
+  "failed": [],
+  "start_time": "2024-12-06T20:25:50.207143",
+  "end_time": "2024-12-06T20:51:50.590510"
+}

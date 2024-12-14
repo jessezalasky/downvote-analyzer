@@ -1,0 +1,7 @@
+flask
+flask-cors
+praw
+pandas
+schedule
+python-dotenv
+pytz

@@ -1,0 +1,32 @@
+{
+  "successful": [
+    "movies",
+    "television",
+    "gaming",
+    "music",
+    "funny",
+    "sacramento",
+    "seattle",
+    "vancouver",
+    "denver",
+    "austin",
+    "worldnews",
+    "news",
+    "politics",
+    "science",
+    "technology",
+    "golf",
+    "thriftstorehauls",
+    "woodworking",
+    "gardening",
+    "cooking",
+    "nba",
+    "nfl",
+    "nhl",
+    "baseball",
+    "formula1"
+  ],
+  "failed": [],
+  "start_time": "2024-12-10T13:56:18.118727",
+  "end_time": "2024-12-10T14:15:32.651115"
+}
