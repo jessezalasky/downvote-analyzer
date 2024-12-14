@@ -38,6 +38,25 @@ class Config:
     
     # Database
     DB_PATH = os.getenv('DB_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reddit_downvotes.db'))
+
+        # PostgreSQL Settings
+    POSTGRES_URL = os.getenv('DATABASE_URL') # Railway provides this
+    # Individual connection parameters (backup if URL not provided)
+    POSTGRES_HOST = os.getenv('PGHOST')
+    POSTGRES_PORT = os.getenv('PGPORT')
+    POSTGRES_DB = os.getenv('PGDATABASE')
+    POSTGRES_USER = os.getenv('PGUSER')
+    POSTGRES_PASSWORD = os.getenv('PGPASSWORD')
+
+    @property
+    def DATABASE_URL(self):
+        """Construct database URL if not provided directly"""
+        if self.POSTGRES_URL:
+            return self.POSTGRES_URL
+        elif all([self.POSTGRES_HOST, self.POSTGRES_PORT, self.POSTGRES_DB, 
+                 self.POSTGRES_USER, self.POSTGRES_PASSWORD]):
+            return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        return None
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE = int(os.getenv('RATE_LIMIT_PER_MINUTE', 100))
