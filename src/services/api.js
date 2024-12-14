@@ -2,9 +2,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 class ApiService {
   constructor() {
-    console.log('Environment variable value:', process.env.REACT_APP_API_URL);
-    console.log('Final baseUrl value:', this.baseUrl);
-    this.baseUrl = API_BASE_URL;
+    console.log('All environment variables:', import.meta.env);
+    console.log('API URL from env:', import.meta.env.VITE_API_URL);
+    this.baseUrl = import.meta.env.VITE_API_URL;
+    console.log('Final baseUrl after assignment:', this.baseUrl);
 }
 
   async fetchWithCache(endpoint) {
