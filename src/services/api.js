@@ -2,8 +2,10 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 class ApiService {
   constructor() {
+    console.log('Environment variable value:', process.env.REACT_APP_API_URL);
+    console.log('Final baseUrl value:', this.baseUrl);
     this.baseUrl = API_BASE_URL;
-  }
+}
 
   async fetchWithCache(endpoint) {
     try {
