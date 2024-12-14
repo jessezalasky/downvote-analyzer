@@ -2,11 +2,10 @@
 
 [project.frontend]
 path = "src"
+build = false
 
 [project.backend]
 path = "backend"
 
-[build]
-
 [start]
-cmd = "python backend/app.py"
+cmd = "python3 backend/app.py"
