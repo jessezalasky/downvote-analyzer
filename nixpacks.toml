@@ -1,3 +1,9 @@
 [project]
 [project.backend]
 path = "backend"
+
+[build]
+buildpacks = ["pkgs/python"]
+
+[start]
+cmd = "python app.py"
