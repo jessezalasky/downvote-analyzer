@@ -1,9 +1,12 @@
 [project]
+
+[project.frontend]
+path = "src"
+
 [project.backend]
 path = "backend"
 
 [build]
-buildpacks = ["pkgs/python"]
 
 [start]
-cmd = "python app.py"
+cmd = "python backend/app.py"
