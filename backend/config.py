@@ -26,10 +26,10 @@ class Config:
     # Server
     PORT = int(os.getenv('PORT', 5000))
     HOST = os.getenv('HOST', '0.0.0.0')
-    API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:5000')
+    API_BASE_URL = os.getenv('API_BASE_URL', 'https://downvotedb.com/api') 
     
     # CORS
-    ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
+    ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://downvotedb.com').split(',')
     
     # Reddit API
     REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
