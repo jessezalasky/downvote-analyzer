@@ -29,7 +29,7 @@ class Config:
     API_BASE_URL = os.getenv('API_BASE_URL', 'https://downvotedb.com/api') 
     
     # CORS
-    ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://downvotedb.com').split(',')
+    ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'https://www.downvotedb.com,https://downvotedb.com').split(',')
     
     # Reddit API
     REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
