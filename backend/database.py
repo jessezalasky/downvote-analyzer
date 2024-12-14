@@ -14,13 +14,22 @@ def get_db_pool():
     global db_pool
     if db_pool is None:
         try:
+            # Log the connection attempt
+            logger.info("Attempting to create database pool")
+            
+            if not config.DATABASE_URL:
+                raise Exception("No DATABASE_URL configured")
+                
+            logger.info("Using DATABASE_URL to connect")
+            
             db_pool = pool.SimpleConnectionPool(
                 minconn=1,
                 maxconn=10,
-                dsn=config.DATABASE_URL
+                dsn=config.DATABASE_URL,
+                sslmode='require'  # Required for Railway
             )
             logger.info("Database pool created successfully")
-        except psycopg2.Error as e:
+        except Exception as e:
             logger.error(f"Error creating database pool: {str(e)}")
             raise
     return db_pool

@@ -47,12 +47,13 @@ class Config:
     POSTGRES_DB = os.getenv('PGDATABASE')
     POSTGRES_USER = os.getenv('PGUSER')
     POSTGRES_PASSWORD = os.getenv('PGPASSWORD')
-
+    
     @property
     def DATABASE_URL(self):
-        """Construct database URL if not provided directly"""
-        if self.POSTGRES_URL:
-            return self.POSTGRES_URL
+        """Get database URL from Railway's provided variable"""
+        database_url = os.getenv('DATABASE_URL')
+        if database_url:
+            return database_url
         elif all([self.POSTGRES_HOST, self.POSTGRES_PORT, self.POSTGRES_DB, 
                  self.POSTGRES_USER, self.POSTGRES_PASSWORD]):
             return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
