@@ -3,3 +3,4 @@ Flask-CORS
 Flask-Limiter
 python-dotenv
 psycopg2-binary
+schedule
