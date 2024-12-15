@@ -398,3 +398,33 @@ def get_stored_daily_champion(subreddit):
         raise
     finally:
         return_db_connection(conn)
+
+def get_subreddit_historical_totals():
+    """Get historical totals for all subreddits"""
+    logger.info("Fetching subreddit historical totals")
+    
+    conn = get_db_connection()  # Get connection directly, not pool
+    
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as c:
+            c.execute('''
+                SELECT 
+                    subreddit,
+                    SUM(total_downvotes) as all_time_downvotes,
+                    SUM(total_comments) as all_time_comments,
+                    COUNT(DISTINCT collection_date) as days_collected,
+                    MAX(collection_date) as last_updated
+                FROM subreddit_historical_data
+                GROUP BY subreddit
+                ORDER BY all_time_downvotes ASC
+            ''')
+            
+            results = c.fetchall()
+            conn.commit()  # Add commit
+            return [dict(row) for row in results]
+    except psycopg2.Error as e:
+        conn.rollback()  # Add rollback on error
+        logger.error(f"Error fetching historical totals: {str(e)}")
+        raise
+    finally:
+        return_db_connection(conn)  # Use return_db_connection instead of pool.putconn
