@@ -3,7 +3,7 @@ Flask-CORS
 Flask-Limiter
 python-dotenv
 psycopg2-binary
-schedule
+schedule==1.2.1
 praw
 pandas
 pytz
