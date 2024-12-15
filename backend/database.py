@@ -2,6 +2,14 @@
 from psycopg2 import pool
 from psycopg2 import OperationalError
 import backoff
+import psycopg2
+from datetime import datetime
+import logging
+# config import
+from config import Config
+
+logger = logging.getLogger(__name__)
+
 
 def get_connection_params(database_url):
     """Parse and enhance connection parameters"""
@@ -58,13 +66,8 @@ def create_connection_pool(config):
 
 # Global connection pool
 db_pool = None
+config = Config() # config init
 
-def get_db_connection():
-    """Get or create database connection pool"""
-    global db_pool
-    if db_pool is None:
-        db_pool = create_connection_pool(config)
-    return db_pool
 
 def close_db_pool():
     """Safely close the connection pool"""
@@ -76,7 +79,10 @@ def close_db_pool():
 
 def get_db_connection():
     """Get a connection from the pool with error handling"""
-    pool = get_db_pool()
+    global db_pool
+    if db_pool is None:
+        db_pool = create_connection_pool(config)
+    pool = db_pool
     try:
         conn = pool.getconn()
         conn.set_session(autocommit=False)  # Explicit transaction management
@@ -87,7 +93,8 @@ def get_db_connection():
 
 def return_db_connection(conn):
     """Safely return a connection to the pool"""
-    pool = get_db_pool()
+    global db_pool
+    pool = db_pool
     try:
         pool.putconn(conn)
     except Exception as e:

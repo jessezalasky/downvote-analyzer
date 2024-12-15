@@ -57,7 +57,11 @@ class Config:
         elif all([self.POSTGRES_HOST, self.POSTGRES_PORT, self.POSTGRES_DB, 
                  self.POSTGRES_USER, self.POSTGRES_PASSWORD]):
             return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        return None
+        
+        # Raise error if no database configuration is found
+        raise ValueError("No database configuration found. Ensure DATABASE_URL is set or provide Postgres connection parameters.")
+
+
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE = int(os.getenv('RATE_LIMIT_PER_MINUTE', 100))

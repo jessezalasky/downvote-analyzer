@@ -1,8 +1,16 @@
+from collections import defaultdict  # Add this if missing
 import praw
 import pandas as pd
 from datetime import datetime, timedelta
 import logging
-from database import store_daily_champion, update_all_time_champion, init_db
+from database import (
+    store_daily_champion, 
+    update_all_time_champion, 
+    init_db,
+    get_db_connection,
+    return_db_connection,
+    store_subreddit_totals
+)
 from config import config
 
 def initialize_reddit():
@@ -152,46 +160,47 @@ def update_all_time_subreddit_totals(subreddit, daily_downvotes, daily_comments)
     """Update all-time totals for a subreddit by adding daily totals"""
     logging.info(f"Updating all-time totals for r/{subreddit}")
 
-    conn = sqlite3.connect(DB_PATH)  # Ensure DB_PATH is correct
-    c = conn.cursor()
-
+    conn = get_db_connection()
+    
     try:
-        # Get current totals if they exist
-        c.execute('SELECT total_downvotes, total_comments FROM all_time_subreddit_totals WHERE subreddit = ?', (subreddit,))
-        current = c.fetchone()
-        logging.info(f"Current totals for r/{subreddit}: {current}")
+        with conn.cursor() as c:
+            # Get current totals if they exist
+            c.execute('SELECT total_downvotes, total_comments FROM all_time_subreddit_totals WHERE subreddit = %s', (subreddit,))
+            current = c.fetchone()
+            logging.info(f"Current totals for r/{subreddit}: {current}")
 
-        current_date = datetime.now().date().isoformat()
+            current_date = datetime.now().date().isoformat()
 
-        if current:
-            # Update existing totals
-            logging.info(f"Updating existing totals for r/{subreddit}")
-            c.execute('''
-                UPDATE all_time_subreddit_totals
-                SET total_downvotes = total_downvotes + ?,
-                    total_comments = total_comments + ?,
-                    last_updated = ?
-                WHERE subreddit = ?
-            ''', (daily_downvotes, daily_comments, current_date, subreddit))
-            logging.info("Update query executed.")
-        else:
-            # Insert new record
-            logging.info(f"Inserting new record for r/{subreddit}")
-            c.execute('''
-                INSERT INTO all_time_subreddit_totals
-                (subreddit, total_downvotes, total_comments, last_updated)
-                VALUES (?, ?, ?, ?)
-            ''', (subreddit, daily_downvotes, daily_comments, current_date))
-            logging.info("Insert query executed.")
+            if current:
+                # Update existing totals
+                logging.info(f"Updating existing totals for r/{subreddit}")
+                c.execute('''
+                    UPDATE all_time_subreddit_totals
+                    SET total_downvotes = total_downvotes + %s,
+                        total_comments = total_comments + %s,
+                        last_updated = %s
+                    WHERE subreddit = %s
+                ''', (daily_downvotes, daily_comments, current_date, subreddit))
+                logging.info("Update query executed.")
+            else:
+                # Insert new record
+                logging.info(f"Inserting new record for r/{subreddit}")
+                c.execute('''
+                    INSERT INTO all_time_subreddit_totals
+                    (subreddit, total_downvotes, total_comments, last_updated)
+                    VALUES (%s, %s, %s, %s)
+                ''', (subreddit, daily_downvotes, daily_comments, current_date))
+                logging.info("Insert query executed.")
 
-        conn.commit()
-        logging.info(f"Successfully updated all-time totals for r/{subreddit}")
+            conn.commit()
+            logging.info(f"Successfully updated all-time totals for r/{subreddit}")
 
     except Exception as e:
+        conn.rollback()
         logging.error(f"Error updating all-time totals for r/{subreddit}: {str(e)}")
-        # Handle the exception here (e.g., log and continue) instead of raising it
+        raise
     finally:
-        conn.close()
+        return_db_connection(conn)
 
 def main():
     # Initialize database if not exists

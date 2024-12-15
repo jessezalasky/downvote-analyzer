@@ -8,12 +8,15 @@ import sqlite3
 from functools import wraps
 from datetime import datetime, timedelta
 from database import (
-    get_all_time_champion, 
-    init_db, 
+    get_all_time_champion,
+    init_db,
     get_subreddit_historical_totals,
     get_stored_daily_champion
 )
-from config import config
+from config import Config
+
+# Configuration
+config = Config()
 
 # Configure logging
 handler = RotatingFileHandler(
@@ -80,7 +83,7 @@ def add_cache_headers(response):
 # Initialize database
 logger.info("Initializing database...")
 init_db()
-logger.info(f"Database initialized at: {config.DB_PATH}")
+logger.info(f"Database initialized")
 
 @app.route('/api/all-time-champion')
 @cache_with_timeout(86400)
