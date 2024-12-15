@@ -7,3 +7,4 @@ schedule==1.2.1
 praw
 pandas
 pytz
+backoff==2.2.1
