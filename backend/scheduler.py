@@ -94,7 +94,7 @@ def run_collection():
 def main():
     # Schedule daily run for 9:00 PM PST
     pst = pytz.timezone('America/Los_Angeles')
-    schedule.every().day.at("22:04").do(run_collection)  # 9 PM PST
+    schedule.every().day.at("21:00").do(run_collection)  # 9 PM PST
     
     logger.info("Scheduler started. Will run daily at 21:00 PST")
     
