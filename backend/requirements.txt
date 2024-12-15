@@ -4,3 +4,6 @@ Flask-Limiter
 python-dotenv
 psycopg2-binary
 schedule
+praw
+pandas
+pytz
