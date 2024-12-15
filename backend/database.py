@@ -1,10 +1,7 @@
+# Add these imports at the top if not already there
 from psycopg2 import pool
 from psycopg2 import OperationalError
-import logging
-import time
-import backoff  # Add this to requirements.txt
-
-logger = logging.getLogger(__name__)
+import backoff
 
 def get_connection_params(database_url):
     """Parse and enhance connection parameters"""
@@ -79,9 +76,9 @@ def close_db_pool():
 
 def get_db_connection():
     """Get a connection from the pool with error handling"""
-    pool = get_db_connection()
+    pool = get_db_pool()
     try:
-        
+        conn = pool.getconn()
         conn.set_session(autocommit=False)  # Explicit transaction management
         return conn
     except Exception as e:
@@ -90,9 +87,9 @@ def get_db_connection():
 
 def return_db_connection(conn):
     """Safely return a connection to the pool"""
-    pool = get_db_connection()
+    pool = get_db_pool()
     try:
-        return_db_connection(conn)
+        pool.putconn(conn)
     except Exception as e:
         logger.error(f"Error returning connection to pool: {str(e)}")
         raise
