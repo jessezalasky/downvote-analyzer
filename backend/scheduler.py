@@ -3,15 +3,14 @@ import time
 import logging
 from datetime import datetime
 import pytz
-from backend.daily_downvotes import get_daily_worst_comment
-from backend.database import init_db
-from backend.category_map import get_all_subreddits
+from daily_downvotes import get_daily_worst_comment
+from database import init_db
+from category_map import get_all_subreddits
 import json
 
-# Configure logging
+# Keep your existing logging setup
 from logging.handlers import RotatingFileHandler
 
-# Configure logging
 handler = RotatingFileHandler(
     filename='downvoter.log',
     maxBytes=1024 * 1024,  # 1MB per file
@@ -50,48 +49,54 @@ def run_collection():
     start_time = datetime.now()
     logger.info("Starting daily collection run")
     
-    # Initialize database if needed
-    init_db()
-    
-    # Get list of subreddits
-    subreddits = get_all_subreddits()
-    
-    # Track results
-    results = {
-        'successful': [],
-        'failed': [],
-        'start_time': start_time.isoformat(),
-        'end_time': None
-    }
-    
-    # Process each subreddit
-    for subreddit in subreddits:
-        success = process_subreddit(subreddit)
-        if success:
-            results['successful'].append(subreddit)
-        else:
-            results['failed'].append(subreddit)
-    
-    # Record completion
-    end_time = datetime.now()
-    results['end_time'] = end_time.isoformat()
-    
-    # Log summary
-    logger.info(f"Collection run complete. Duration: {end_time - start_time}")
-    logger.info(f"Successful: {len(results['successful'])}/{len(subreddits)}")
-    if results['failed']:
-        logging.warning(f"Failed subreddits: {', '.join(results['failed'])}")
-    
-    # Save results to JSON file
-    with open(f'collection_results_{start_time.strftime("%Y%m%d")}.json', 'w') as f:
-        json.dump(results, f, indent=2)
+    try:
+        # Initialize database if needed
+        init_db()
+        
+        # Get list of subreddits
+        subreddits = get_all_subreddits()
+        
+        # Track results
+        results = {
+            'successful': [],
+            'failed': [],
+            'start_time': start_time.isoformat(),
+            'end_time': None
+        }
+        
+        # Process each subreddit
+        for subreddit in subreddits:
+            success = process_subreddit(subreddit)
+            if success:
+                results['successful'].append(subreddit)
+            else:
+                results['failed'].append(subreddit)
+        
+        # Record completion
+        end_time = datetime.now()
+        results['end_time'] = end_time.isoformat()
+        
+        # Log summary
+        logger.info(f"Collection run complete. Duration: {end_time - start_time}")
+        logger.info(f"Successful: {len(results['successful'])}/{len(subreddits)}")
+        if results['failed']:
+            logging.warning(f"Failed subreddits: {', '.join(results['failed'])}")
+        
+        # Save results to JSON file with UTC timestamp
+        timestamp = datetime.now(pytz.UTC).strftime("%Y%m%d_%H%M%S")
+        with open(f'collection_results_{timestamp}.json', 'w') as f:
+            json.dump(results, f, indent=2)
+            
+    except Exception as e:
+        logger.error(f"Collection run failed: {str(e)}")
+        raise
 
 def main():
     # Schedule daily run for 9:00 PM PST
     pst = pytz.timezone('America/Los_Angeles')
-    schedule.every().day.at("13:42").do(run_collection)  # Change time as needed for testing
+    schedule.every().day.at("22:04").do(run_collection)  # 9 PM PST
     
-    logger.info("Scheduler started. Will run daily at 21:00 PST")  # Update log message to match time
+    logger.info("Scheduler started. Will run daily at 21:00 PST")
     
     while True:
         schedule.run_pending()

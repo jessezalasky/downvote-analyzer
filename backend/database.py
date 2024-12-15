@@ -19,6 +19,9 @@ def get_db_pool():
             
             if not config.DATABASE_URL:
                 raise Exception("No DATABASE_URL configured")
+            
+                        # Different SSL settings for local vs production
+            ssl_mode = 'require' if 'railway.app' in config.DATABASE_URL else 'prefer'
                 
             logger.info("Using DATABASE_URL to connect")
             
@@ -26,7 +29,7 @@ def get_db_pool():
                 minconn=1,
                 maxconn=10,
                 dsn=config.DATABASE_URL,
-                sslmode='require'  # Required for Railway
+                sslmode=ssl_mode  # Required for Railway
             )
             logger.info("Database pool created successfully")
         except Exception as e:
