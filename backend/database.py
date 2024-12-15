@@ -285,38 +285,33 @@ def get_all_time_champion():
     finally:
         return_db_connection(conn)
 
-def store_subreddit_totals(subreddit, total_downvotes, total_comments):
-    """Store daily totals for a subreddit in the database"""
-    logger.info(f"Storing daily totals for r/{subreddit}")
-    
-    conn = get_db_connection()  # Changed from pool to conn
-
-    recorded_date = datetime.now().date().isoformat()
+def store_daily_champion(comment_data):
+    """Store a daily champion in the database"""
+    conn = get_db_connection()
     
     try:
         with conn.cursor() as c:
-            # Store in historical data
-            data = {
-                'downvoted_comments': total_comments,  # This is count of downvoted comments
-                'total_downvotes': total_downvotes,
-                'total_comments': total_comments
-            }
-            store_subreddit_historical_data(subreddit, data)
+            # Convert datetime objects to strings
+            created_utc = comment_data['created_utc'].isoformat() if isinstance(comment_data['created_utc'], datetime) else comment_data['created_utc']
+            recorded_date = datetime.now().date().isoformat()
             
-            # Update all_time_subreddit_totals for backward compatibility
+            # Log before insert
+            logger.info(f"Inserting record with date: {recorded_date}")
+            
             c.execute('''
-                INSERT INTO all_time_subreddit_totals 
-                (subreddit, total_downvotes, total_comments, last_updated)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (subreddit) 
-                DO UPDATE SET
-                    total_downvotes = EXCLUDED.total_downvotes,
-                    total_comments = EXCLUDED.total_comments,
-                    last_updated = EXCLUDED.last_updated
+                INSERT INTO daily_champions 
+                (comment_id, subreddit, score, body, author, permalink, submission_title, created_utc, recorded_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (subreddit, comment_id, recorded_date) DO NOTHING
             ''', (
-                subreddit,
-                total_downvotes,
-                total_comments,
+                comment_data['comment_id'],
+                comment_data['subreddit'],
+                comment_data['score'],
+                comment_data['body'],
+                comment_data['author'],
+                comment_data['permalink'],
+                comment_data['submission_title'],
+                created_utc,
                 recorded_date
             ))
             
