@@ -11,6 +11,7 @@ from database import (
     init_db,
     get_subreddit_historical_totals,
     get_stored_daily_champion,
+    test_database_connection,
     db_manager  # Import the database manager
 )
 from config import config
@@ -256,6 +257,13 @@ def weekly_trends():
 def cleanup(exception=None):
     """Cleanup function that runs after each request"""
     pass  # Connection cleanup is handled by the connection pool
+
+# Test database connection at startup
+if not test_database_connection():
+    logger.error("Failed to establish database connection at startup")
+    raise RuntimeError("Could not connect to database")
+
+logger.info("Database connection verified")
 
 if __name__ == '__main__':
     app.run(
