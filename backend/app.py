@@ -111,16 +111,17 @@ def get_comments(subreddit):
         logger.error(f"Error in get_comments for r/{subreddit}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/all-time-subreddit-totals')
+@app.route('/api/subreddit-totals')
 @cache_with_timeout(86400)
-def all_time_subreddit_totals():
+def subreddit_totals():
     try:
-        logger.info("Received request for all-time subreddit totals")
-        totals = get_subreddit_historical_totals()
+        logger.info("Received request for subreddit totals")
+        totals = get_subreddit_totals()
+        logger.info(f"Subreddit totals dates: {[t.get('collection_date') for t in totals if isinstance(t, dict)]}")  # Added logging
         response = make_response(jsonify({'totals': totals}))
         return add_cache_headers(response)
     except Exception as e:
-        logger.error(f"Error processing all-time totals request: {str(e)}")
+        logger.error(f"Error processing subreddit totals request: {str(e)}", exc_info=True)  # Added exc_info=True
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/subreddit-totals')
@@ -273,6 +274,7 @@ def get_comments_batch():
             'recorded_date': row['recorded_date']
         } for row in rows}
         
+        logger.info(f"Batch comments dates: {set(r['recorded_date'] for r in results.values())}") 
         response = make_response(jsonify({'comments': results}))
         return add_cache_headers(response)
     except Exception as e:
