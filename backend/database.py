@@ -104,10 +104,13 @@ def return_db_connection(conn):
 
 def init_db():
     """Initialize the database with required tables"""
+    print("Starting init_db function")  # Debug
     conn = get_db_connection()  # Changed from pool to conn
+    print("Got database connection")  # Debug
     
     try:
         with conn.cursor() as c:  # Added with statement
+            print("Creating daily_champions table...")  # Debug
             # Create daily champions table
             c.execute('''
                 CREATE TABLE IF NOT EXISTS daily_champions (
@@ -124,6 +127,8 @@ def init_db():
                     UNIQUE(subreddit, comment_id, recorded_date)
                 )
             ''')
+
+            print("Created daily_champions table")  # Debug
 
             # Create all-time champion table
             c.execute('''
@@ -166,8 +171,12 @@ def init_db():
             ''')
             
         conn.commit()
+        print("Committed all table creations")  # Debug
+        logger.info("Database tables initialized successfully")
     except Exception as e:
         conn.rollback()
+        print(f"Error in init_db: {str(e)}")  # Debug
+        logger.error(f"Database initialization failed: {str(e)}")
         raise
     finally:
         return_db_connection(conn)
