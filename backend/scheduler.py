@@ -3,24 +3,24 @@ import time
 import logging
 from datetime import datetime
 import pytz
-from daily_downvotes import get_daily_worst_comment
-from database import init_db
-from category_map import get_all_subreddits
-import json
-
-# Keep your existing logging setup
 from logging.handlers import RotatingFileHandler
+import json
+from daily_downvotes import get_daily_worst_comment
+from database import init_db, db_manager
+from category_map import get_all_subreddits
+from config import config
 
+# Configure logging
 handler = RotatingFileHandler(
-    filename='downvoter.log',
-    maxBytes=1024 * 1024,  # 1MB per file
-    backupCount=7  # Keep 7 backup files
+    filename=config.LOG_FILE,
+    maxBytes=config.LOG_MAX_BYTES,
+    backupCount=config.LOG_BACKUP_COUNT
 )
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 
 logger = logging.getLogger('scheduler')
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, config.LOG_LEVEL))
 logger.addHandler(handler)
 
 def process_subreddit(subreddit):
@@ -36,12 +36,12 @@ def process_subreddit(subreddit):
             return True
         except Exception as e:
             retry_count += 1
+            wait_time = 2 ** retry_count  # Exponential backoff: 2, 4, 8 seconds
             if retry_count < max_retries:
-                wait_time = 2 ** retry_count  # Exponential backoff: 2, 4, 8 seconds
-                logging.warning(f"Attempt {retry_count} failed for {subreddit}. Retrying in {wait_time} seconds. Error: {str(e)}")
+                logger.warning(f"Attempt {retry_count} failed for {subreddit}. Retrying in {wait_time} seconds. Error: {str(e)}")
                 time.sleep(wait_time)
             else:
-                logging.error(f"Failed to process {subreddit} after {max_retries} attempts. Error: {str(e)}")
+                logger.error(f"Failed to process {subreddit} after {max_retries} attempts. Error: {str(e)}")
                 return False
 
 def run_collection():
@@ -61,61 +61,91 @@ def run_collection():
             'successful': [],
             'failed': [],
             'start_time': start_time.isoformat(),
-            'end_time': None
+            'end_time': None,
+            'total_subreddits': len(subreddits)
         }
         
         # Process each subreddit
-        for subreddit in subreddits:
+        for i, subreddit in enumerate(subreddits, 1):
+            logger.info(f"Processing {i}/{len(subreddits)}: r/{subreddit}")
             success = process_subreddit(subreddit)
             if success:
                 results['successful'].append(subreddit)
+                logger.info(f"Successfully processed r/{subreddit}")
             else:
                 results['failed'].append(subreddit)
+                logger.error(f"Failed to process r/{subreddit}")
         
         # Record completion
         end_time = datetime.now()
         results['end_time'] = end_time.isoformat()
+        results['duration'] = str(end_time - start_time)
         
         # Log summary
         logger.info(f"Collection run complete. Duration: {end_time - start_time}")
         logger.info(f"Successful: {len(results['successful'])}/{len(subreddits)}")
         if results['failed']:
-            logging.warning(f"Failed subreddits: {', '.join(results['failed'])}")
+            logger.warning(f"Failed subreddits: {', '.join(results['failed'])}")
         
         # Save results to JSON file with UTC timestamp
         timestamp = datetime.now(pytz.UTC).strftime("%Y%m%d_%H%M%S")
-        with open(f'collection_results_{timestamp}.json', 'w') as f:
-            json.dump(results, f, indent=2)
+        result_file = f'collection_results_{timestamp}.json'
+        
+        try:
+            with open(result_file, 'w') as f:
+                json.dump(results, f, indent=2)
+            logger.info(f"Results saved to {result_file}")
+        except Exception as e:
+            logger.error(f"Failed to save results file: {str(e)}")
             
     except Exception as e:
         logger.error(f"Collection run failed: {str(e)}")
         raise
+    finally:
+        try:
+            # Cleanup any remaining database connections
+            db_manager.pool.closeall()
+            logger.info("Closed all database connections")
+        except Exception as e:
+            logger.error(f"Error during connection cleanup: {str(e)}")
 
 def main():
-    print("Entering main function")
-    logging.info("Setting up scheduler")
+    logger.info("Starting scheduler")
     
-    # Initialize database if not exists
-    init_db()
-    
-    # Schedule daily run for 9:50 PM PST
+    # Schedule daily run for 9:00 PM PST
     pst = pytz.timezone('America/Los_Angeles')
-    schedule.every().day.at("22:30").do(run_collection)  # 9:50 PM PST
+    schedule_time = "21:00"
     
-    logging.info("Scheduler started. Will run daily at 22:08 PST")
-    print("Scheduler is running...")
+    # Schedule the job
+    schedule.every().day.at(schedule_time).do(run_collection)
+    logger.info(f"Scheduled daily collection for {schedule_time} PST")
     
-    while True:
-        schedule.run_pending()
-        time.sleep(60)  # Check every minute
+    # Run immediately if specified
+    if config.DEBUG:
+        logger.info("Debug mode: Running initial collection immediately")
+        run_collection()
+    
+    try:
+        while True:
+            schedule.run_pending()
+            time.sleep(60)  # Check every minute
+            
+    except KeyboardInterrupt:
+        logger.info("Scheduler stopped by user")
+    except Exception as e:
+        logger.error(f"Scheduler crashed: {str(e)}")
+        raise
+    finally:
+        # Ensure connections are cleaned up
+        try:
+            db_manager.pool.closeall()
+            logger.info("Cleaned up database connections")
+        except Exception as e:
+            logger.error(f"Error during final cleanup: {str(e)}")
 
 if __name__ == "__main__":
-    print("Starting scheduler script")  # Add this
     try:
-        print("About to initialize database")  # Add this
-        init_db()  # Try calling it here instead of in main()
-        print("Database initialized")  # Add this
         main()
     except Exception as e:
-        print(f"Error: {str(e)}")  # Add this
+        logger.error(f"Fatal error in scheduler: {str(e)}")
         raise
