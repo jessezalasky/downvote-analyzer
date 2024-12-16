@@ -397,3 +397,19 @@ def get_subreddit_historical_totals():
         raise
     finally:
         db_manager.return_connection(conn)
+
+def test_database_connection():
+    """Test database connectivity"""
+    logger.info("Testing database connection...")
+    conn = db_manager.get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT version()')
+            version = cur.fetchone()[0]
+            logger.info(f"Successfully connected to PostgreSQL: {version}")
+            return True
+    except Exception as e:
+        logger.error(f"Database connection test failed: {str(e)}")
+        return False
+    finally:
+        db_manager.return_connection(conn)
