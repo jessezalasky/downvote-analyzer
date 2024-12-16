@@ -1,8 +1,9 @@
 # Add these imports at the top if not already there
+import psycopg2
 from psycopg2 import pool
 from psycopg2 import OperationalError
+from psycopg2 import extras
 import backoff
-import psycopg2
 from datetime import datetime
 import logging
 # config import

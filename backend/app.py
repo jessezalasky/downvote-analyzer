@@ -94,7 +94,7 @@ def get_champion():
         response = make_response(jsonify({'champion': champion}))
         return add_cache_headers(response)
     except Exception as e:
-        logger.error(f"Error fetching all-time champion: {str(e)}")
+        logger.error(f"Error fetching all-time champion: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/comments/<subreddit>')
