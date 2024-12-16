@@ -130,6 +130,19 @@ def subreddit_totals():
     except Exception as e:
         logger.error(f"Error processing subreddit totals request: {str(e)}", exc_info=True)  # Added exc_info=True
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/all-time-subreddit-totals')
+@cache_with_timeout(86400)
+def all_time_subreddit_totals():
+    try:
+        logger.info("Received request for all-time subreddit totals")
+        totals = get_subreddit_historical_totals()
+        logger.info(f"Found totals for {len(totals)} subreddits")
+        response = make_response(jsonify({'totals': totals}))
+        return add_cache_headers(response)
+    except Exception as e:
+        logger.error(f"Error processing all-time totals request: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/weekly-trends')
 @cache_with_timeout(86400)
