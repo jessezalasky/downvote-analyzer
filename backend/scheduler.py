@@ -1,3 +1,9 @@
+import os
+PG_USER = os.getenv('PGUSER')
+PG_HOST = os.getenv('PGHOST')
+PG_PASSWORD = os.getenv('PGPASSWORD')
+PG_DATABASE = os.getenv('PGDATABASE')
+PG_PORT = os.getenv('PGPORT', 5432)
 import schedule
 import time
 import logging
