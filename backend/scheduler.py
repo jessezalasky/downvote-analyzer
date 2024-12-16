@@ -92,9 +92,14 @@ def run_collection():
         raise
 
 def main():
+    print("Entering main function")  # Add this
+    logging.info("Setting up scheduler")  # Add this
     # Schedule daily run for 9:00 PM PST
     pst = pytz.timezone('America/Los_Angeles')
-    schedule.every().day.at("21:00").do(run_collection)  # 9 PM PST
+    schedule.every().day.at("21:50").do(run_collection)  # 9 PM PST
+
+    logging.info("Scheduler started. Will run daily at 21:00 PST")  # Add this
+    print("Scheduler is running...")  # Add this
     
     logger.info("Scheduler started. Will run daily at 21:00 PST")
     
@@ -104,9 +109,11 @@ def main():
 
 if __name__ == "__main__":
     try:
+        print("Scheduler starting up...")  # Add this
+        logging.info("Scheduler service initializing")  # Add this
         main()
     except KeyboardInterrupt:
         logger.info("Scheduler stopped by user")
     except Exception as e:
-        logging.error(f"Scheduler crashed: {str(e)}")
+        logging.error(f"Scheduler crashed: {str(e)}", exc_info=True)
         raise
