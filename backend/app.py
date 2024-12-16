@@ -34,8 +34,14 @@ logger.addHandler(handler)
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configure CORS
-CORS(app, resources={r"/api/*": {"origins": config.ALLOWED_ORIGINS}})
+CORS(app, resources={
+    r"/api/*": {
+        "origins": config.ALLOWED_ORIGINS,
+        "methods": ["GET", "OPTIONS"],
+        "allow_headers": ["Content-Type"],
+        "expose_headers": ["Cache-Control"]
+    }
+})
 
 # Configure rate limiting
 limiter = Limiter(
