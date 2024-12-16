@@ -45,6 +45,11 @@ CORS(app, resources={
     }
 })
 
+# Initialize database
+logger.info("Initializing database...")
+init_db()
+logger.info("Database initialized")
+
 # Configure rate limiting
 limiter = Limiter(
     app=app,

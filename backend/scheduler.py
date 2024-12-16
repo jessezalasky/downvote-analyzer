@@ -92,28 +92,30 @@ def run_collection():
         raise
 
 def main():
-    print("Entering main function")  # Add this
-    logging.info("Setting up scheduler")  # Add this
-    # Schedule daily run for 9:00 PM PST
-    pst = pytz.timezone('America/Los_Angeles')
-    schedule.every().day.at("21:50").do(run_collection)  # 9 PM PST
-
-    logging.info("Scheduler started. Will run daily at 21:00 PST")  # Add this
-    print("Scheduler is running...")  # Add this
+    print("Entering main function")
+    logging.info("Setting up scheduler")
     
-    logger.info("Scheduler started. Will run daily at 21:00 PST")
+    # Initialize database if not exists
+    init_db()
+    
+    # Schedule daily run for 9:50 PM PST
+    pst = pytz.timezone('America/Los_Angeles')
+    schedule.every().day.at("22:08").do(run_collection)  # 9:50 PM PST
+    
+    logging.info("Scheduler started. Will run daily at 22:08 PST")
+    print("Scheduler is running...")
     
     while True:
         schedule.run_pending()
         time.sleep(60)  # Check every minute
 
 if __name__ == "__main__":
+    print("Starting scheduler script")  # Add this
     try:
-        print("Scheduler starting up...")  # Add this
-        logging.info("Scheduler service initializing")  # Add this
+        print("About to initialize database")  # Add this
+        init_db()  # Try calling it here instead of in main()
+        print("Database initialized")  # Add this
         main()
-    except KeyboardInterrupt:
-        logger.info("Scheduler stopped by user")
     except Exception as e:
-        logging.error(f"Scheduler crashed: {str(e)}", exc_info=True)
+        print(f"Error: {str(e)}")  # Add this
         raise
