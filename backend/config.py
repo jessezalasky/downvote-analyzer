@@ -26,6 +26,10 @@ class Config:
         # Base configuration
         self.ENV = os.getenv('NODE_ENV', 'development')
         self.DEBUG = self.ENV == 'development'
+
+                # Server settings
+        self.PORT = int(os.getenv('PORT', 5000))
+        self.HOST = os.getenv('HOST', '0.0.0.0')  # Added this line back
         
         # Database URL parsing and validation
         database_url = os.getenv('DATABASE_URL')
