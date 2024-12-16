@@ -38,8 +38,9 @@ CORS(app, resources={
     r"/api/*": {
         "origins": config.ALLOWED_ORIGINS,
         "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type"],
-        "expose_headers": ["Cache-Control"]
+        "allow_headers": ["Content-Type", "Cache-Control", "Pragma"],  # Added Cache-Control and Pragma
+        "expose_headers": ["Cache-Control"],
+        "supports_credentials": True
     }
 })
 
