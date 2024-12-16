@@ -7,6 +7,7 @@ from logging.handlers import RotatingFileHandler
 import sqlite3
 from functools import wraps
 from datetime import datetime, timedelta
+import pytz
 from database import (
     get_all_time_champion,
     init_db,
@@ -87,13 +88,24 @@ def add_cache_headers(response):
     response.headers['Varies'] = 'Accept-Encoding'
     return response
 
+def calculate_cache_expiry():
+    """Calculate seconds until next cache refresh after 9:05 PM PST"""
+    pst = pytz.timezone('America/Los_Angeles')
+    now = datetime.now(pst)
+    target = now.replace(hour=21, minute=5, second=0)  # 9:05 PM PST
+    
+    if now > target:
+        target = target + timedelta(days=1)  # Move to next day
+    
+    return int((target - now).total_seconds())
+
 # Initialize database
 logger.info("Initializing database...")
 init_db()
 logger.info(f"Database initialized")
 
 @app.route('/api/all-time-champion')
-@cache_with_timeout(86400)
+@cache_with_timeout(calculate_cache_expiry())
 def get_champion():
     try:
         logger.info("Fetching all-time champion")
@@ -105,7 +117,7 @@ def get_champion():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/comments/<subreddit>')
-@cache_with_timeout(86400)
+@cache_with_timeout(calculate_cache_expiry())
 def get_comments(subreddit):
     try:
         logger.info(f"Fetching comments for {subreddit}")
@@ -119,7 +131,7 @@ def get_comments(subreddit):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/subreddit-totals')
-@cache_with_timeout(86400)
+@cache_with_timeout(calculate_cache_expiry())
 def subreddit_totals():
     try:
         logger.info("Received request for subreddit totals")
@@ -132,7 +144,7 @@ def subreddit_totals():
         return jsonify({'error': str(e)}), 500
     
 @app.route('/api/all-time-subreddit-totals')
-@cache_with_timeout(86400)
+@cache_with_timeout(calculate_cache_expiry())
 def all_time_subreddit_totals():
     try:
         logger.info("Received request for all-time subreddit totals")
@@ -145,7 +157,7 @@ def all_time_subreddit_totals():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/weekly-trends')
-@cache_with_timeout(86400)
+@cache_with_timeout(calculate_cache_expiry())
 def weekly_trends():
     try:
         logger.info("Received request for weekly trends")
@@ -238,7 +250,7 @@ def get_subreddit_totals():
         conn.close()
 
 @app.route('/api/comments/batch')
-@cache_with_timeout(86400)
+@cache_with_timeout(calculate_cache_expiry())
 def get_comments_batch():
     try:
         logger.info("Fetching batch comments for all subreddits")
