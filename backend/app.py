@@ -12,9 +12,44 @@ from database import (
     get_subreddit_historical_totals,
     get_stored_daily_champion,
     test_database_connection,
-    db_manager  # Import the database manager
+    db_manager
 )
 from config import config
+
+# Configure logging
+logger = logging.getLogger('app')
+logger.setLevel(logging.INFO)
+
+# Create handler
+handler = RotatingFileHandler(
+    filename=config.LOG_FILE,
+    maxBytes=config.LOG_MAX_BYTES,
+    backupCount=config.LOG_BACKUP_COUNT
+)
+
+# Create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+# After your imports
+logger.info("Starting Reddit Downvote Analyzer API")
+
+# Initialize database
+logger.info("Initializing database...")
+try:
+    init_db()
+    logger.info("Database initialized successfully")
+except Exception as e:
+    logger.error(f"Database initialization failed: {str(e)}")
+    raise
+
+# Test database connection
+logger.info("Testing database connection...")
+if not test_database_connection():
+    logger.error("Failed to establish database connection at startup")
+    raise RuntimeError("Could not connect to database")
+logger.info("Database connection verified successfully")
 
 # Configure logging
 handler = RotatingFileHandler(
@@ -252,6 +287,39 @@ def weekly_trends():
     except Exception as e:
         logger.error(f"Error processing weekly trends request: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/health')
+def health_check():
+    """API health check endpoint"""
+    try:
+        # Test database connection
+        if test_database_connection():
+            return jsonify({
+                'status': 'healthy',
+                'database': 'connected',
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                'status': 'unhealthy',
+                'database': 'disconnected',
+                'timestamp': datetime.now().isoformat()
+            }), 500
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+if __name__ == '__main__':
+    logger.info(f"Starting Flask server on {config.HOST}:{config.PORT}")
+    app.run(
+        host=config.HOST,
+        port=config.PORT,
+        debug=config.DEBUG
+    )
 
 @app.teardown_appcontext
 def cleanup(exception=None):
