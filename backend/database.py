@@ -318,6 +318,54 @@ def get_stored_daily_champion(subreddit):
     finally:
         db_manager.return_connection(conn)
 
+def update_all_time_champion(comment_data):
+    """Update all-time champion if this comment has more downvotes"""
+    logger.info(f"Checking all-time champion against score: {comment_data['score']}")
+    
+    conn = db_manager.get_connection()
+    try:
+        with conn.cursor() as cur:
+            # Convert datetime objects to strings
+            created_utc = comment_data['created_utc'].isoformat() if isinstance(comment_data['created_utc'], datetime) else comment_data['created_utc']
+            recorded_date = datetime.now().date().isoformat()
+
+            # Get current champion's score
+            cur.execute('SELECT score FROM all_time_champion LIMIT 1')
+            current_champion = cur.fetchone()
+
+            if not current_champion or comment_data['score'] < current_champion[0]:
+                logger.info(f"New all-time champion found! Score: {comment_data['score']}")
+
+                # Delete old champion and insert new one
+                cur.execute('TRUNCATE TABLE all_time_champion')
+                cur.execute('''
+                    INSERT INTO all_time_champion 
+                    (comment_id, subreddit, score, body, author, permalink, 
+                     submission_title, created_utc, recorded_date)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (
+                    comment_data['comment_id'],
+                    comment_data['subreddit'],
+                    comment_data['score'],
+                    comment_data['body'],
+                    comment_data['author'],
+                    comment_data['permalink'],
+                    comment_data['submission_title'],
+                    created_utc,
+                    recorded_date
+                ))
+                logger.info("All-time champion updated successfully")
+            else:
+                logger.info("No new all-time champion - current record stands")
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Failed to update all-time champion: {str(e)}")
+        raise
+    finally:
+        db_manager.return_connection(conn)
+
 def get_subreddit_historical_totals():
     """Get historical totals for all subreddits"""
     conn = db_manager.get_connection()
