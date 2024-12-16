@@ -166,10 +166,8 @@ def init_db():
             ''')
             
         conn.commit()
-        logger.info("Database tables initialized successfully")
-    except psycopg2.Error as e:
+    except Exception as e:
         conn.rollback()
-        logger.error(f"Database initialization failed: {str(e)}")
         raise
     finally:
         return_db_connection(conn)
