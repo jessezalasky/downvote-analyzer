@@ -78,8 +78,8 @@ def get_daily_worst_comment(subreddit_name):
         
         try:
             # Calculate and store subreddit totals
-            total_downvotes = df['score'].sum()
-            total_comments = len(df)
+            total_downvotes = int(df['score'].sum())
+            total_comments = int(len(df))
             store_subreddit_totals(subreddit_name, total_downvotes, total_comments)
             logger.info(f"Stored totals for r/{subreddit_name}: {total_downvotes} downvotes across {total_comments} comments")
         except Exception as e:
