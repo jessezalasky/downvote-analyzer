@@ -131,6 +131,11 @@ def main():
         logger.info("Debug mode: Running initial collection immediately")
         run_collection()
     
+    # Add this critical while loop
+    while True:
+        schedule.run_pending()
+        time.sleep(60)  # Check every minute
+    
     try:
         while True:
             schedule.run_pending()
