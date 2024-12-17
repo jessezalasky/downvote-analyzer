@@ -120,7 +120,7 @@ def main():
     
     # Schedule daily run for 9:00 PM PST
     pst = pytz.timezone('America/Los_Angeles')
-    schedule_time = "12:05"
+    schedule_time = "11:38"
     
     # Schedule the job
     schedule.every().day.at(schedule_time).do(run_collection)
