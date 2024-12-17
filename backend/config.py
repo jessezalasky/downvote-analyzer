@@ -27,6 +27,17 @@ class Config:
         self.ENV = os.getenv('NODE_ENV', 'development')
         self.DEBUG = self.ENV == 'development'
 
+    # Add Reddit API Settings
+        self.REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
+        if not self.REDDIT_CLIENT_ID:
+            raise ValueError("REDDIT_CLIENT_ID environment variable is not set")
+        
+        self.REDDIT_CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
+        if not self.REDDIT_CLIENT_SECRET:
+            raise ValueError("REDDIT_CLIENT_SECRET environment variable is not set")
+        
+        self.REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT', 'DownvoteAnalyzer/1.0')
+    
                 # Server settings
         self.PORT = int(os.getenv('PORT', 5000))
         self.HOST = os.getenv('HOST', '0.0.0.0')  # Added this line back
