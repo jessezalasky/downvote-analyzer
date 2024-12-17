@@ -7,4 +7,7 @@ COPY backend/ .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "scheduler.py"]
+# Add this environment variable
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "-u", "scheduler.py"]

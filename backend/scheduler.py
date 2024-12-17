@@ -1,34 +1,36 @@
 import os
+import schedule
+import time
+import logging
+import json
+import pytz
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+
+# Database and environment configuration
 PG_USER = os.getenv('PGUSER')
 PG_HOST = os.getenv('PGHOST')
 PG_PASSWORD = os.getenv('PGPASSWORD')
 PG_DATABASE = os.getenv('PGDATABASE')
 PG_PORT = os.getenv('PGPORT', 5432)
-import schedule
-import time
-import logging
-from datetime import datetime
-import pytz
-from logging.handlers import RotatingFileHandler
-import json
+
+# Local imports
 from daily_downvotes import get_daily_worst_comment
-from database import init_db, db_manager
+from database import init_db
 from category_map import get_all_subreddits
 from config import config
 
-# Configure logging
+# Configure logger
+logger = logging.getLogger('scheduler')
 handler = RotatingFileHandler(
-    filename=config.LOG_FILE,
-    maxBytes=config.LOG_MAX_BYTES,
-    backupCount=config.LOG_BACKUP_COUNT
+    filename='scheduler.log',
+    maxBytes=1024 * 1024,  # 1MB per file
+    backupCount=7  # Keep 7 backup files
 )
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
-
-logger = logging.getLogger('scheduler')
-logger.setLevel(getattr(logging, config.LOG_LEVEL))
 logger.addHandler(handler)
-
+logger.setLevel(logging.INFO)
 def process_subreddit(subreddit):
     """Process a single subreddit with error handling and retries"""
     max_retries = 3
@@ -107,36 +109,32 @@ def run_collection():
     except Exception as e:
         logger.error(f"Collection run failed: {str(e)}")
         raise
-    finally:
-        try:
-            # Cleanup any remaining database connections
-            db_manager.pool.closeall()
-            logger.info("Closed all database connections")
-        except Exception as e:
-            logger.error(f"Error during connection cleanup: {str(e)}")
 
 def main():
+    # Configure logging immediately
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        force=True
+    )
+    
     logger.info("Starting scheduler")
     
-    # Schedule daily run for 9:00 PM PST
-    pst = pytz.timezone('America/Los_Angeles')
-    schedule_time = "11:38"
-    
-    # Schedule the job
-    schedule.every().day.at(schedule_time).do(run_collection)
-    logger.info(f"Scheduled daily collection for {schedule_time} PST")
-    
-    # Run immediately if specified
-    if config.DEBUG:
-        logger.info("Debug mode: Running initial collection immediately")
-        run_collection()
-    
-    # Add this critical while loop
-    while True:
-        schedule.run_pending()
-        time.sleep(60)  # Check every minute
-    
     try:
+        # Schedule daily run for specified time
+        pst = pytz.timezone('America/Los_Angeles')
+        schedule_time = "11:38"  # You can adjust this time as needed
+        
+        # Schedule the job
+        schedule.every().day.at(schedule_time).do(run_collection)
+        logger.info(f"Scheduled daily collection for {schedule_time} PST")
+        
+        # Run immediately if in debug mode
+        if config.DEBUG:
+            logger.info("Debug mode: Running initial collection immediately")
+            run_collection()
+        
+        logger.info("Entering main scheduler loop")
         while True:
             schedule.run_pending()
             time.sleep(60)  # Check every minute
@@ -149,12 +147,14 @@ def main():
     finally:
         # Ensure connections are cleaned up
         try:
-            db_manager.pool.closeall()
+            from database import close_db_pool  # Import here to avoid circular imports
+            close_db_pool()
             logger.info("Cleaned up database connections")
         except Exception as e:
             logger.error(f"Error during final cleanup: {str(e)}")
 
 if __name__ == "__main__":
+    print("Scheduler script starting...")  # Immediate feedback for debugging
     try:
         main()
     except Exception as e:
