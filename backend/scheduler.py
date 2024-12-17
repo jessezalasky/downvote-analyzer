@@ -129,10 +129,9 @@ def main():
         schedule.every().day.at(schedule_time).do(run_collection)
         logger.info(f"Scheduled daily collection for {schedule_time} PST")
         
-        # Run immediately if in debug mode
-        if config.DEBUG:
-            logger.info("Debug mode: Running initial collection immediately")
-            run_collection()
+        # Force an immediate run for testing
+        logger.info("Running initial collection immediately for testing")
+        run_collection()
         
         logger.info("Entering main scheduler loop")
         while True:
