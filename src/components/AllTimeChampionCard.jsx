@@ -15,7 +15,7 @@ function AllTimeChampionCard({ champion }) {
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Score Display */}
-        <div className="flex flex-shrink-0 items-center justify-center md:w-24">
+        <div className="flex flex-shrink-0 items-center justify-start md:justify-center md:w-24">
           <span className={`${typography.score} ${colors.score.primary}`}>
             {champion.score}
           </span>
