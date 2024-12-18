@@ -128,6 +128,10 @@ def main():
         # Schedule the job
         schedule.every().day.at(schedule_time).do(run_collection)
         logger.info(f"Scheduled daily collection for {schedule_time} PST")
+
+        # Force an immediate run for testing
+        logger.info("Running initial collection immediately for testing")
+        run_collection()
         
         logger.info("Entering main scheduler loop")
         while True:
