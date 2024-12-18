@@ -205,26 +205,35 @@ def get_comments_batch():
         
         try:
             with conn.cursor() as cur:
+                # Log the query execution
+                logger.info("Executing batch query for all subreddits")
+                
                 cur.execute('''
-                    SELECT DISTINCT 
-                        subreddit, 
-                        comment_id,
-                        score,
-                        body,
-                        author,
-                        permalink,
-                        submission_title,
-                        created_utc,
-                        recorded_date
-                    FROM daily_champions
-                    WHERE (subreddit, recorded_date) IN (
-                        SELECT subreddit, MAX(recorded_date)
+                    WITH latest_dates AS (
+                        SELECT subreddit, MAX(recorded_date) as max_date
                         FROM daily_champions
                         GROUP BY subreddit
                     )
+                    SELECT 
+                        dc.subreddit,
+                        dc.comment_id,
+                        dc.score,
+                        dc.body,
+                        dc.author,
+                        dc.permalink,
+                        dc.submission_title,
+                        dc.created_utc,
+                        dc.recorded_date
+                    FROM daily_champions dc
+                    INNER JOIN latest_dates ld 
+                        ON dc.subreddit = ld.subreddit 
+                        AND dc.recorded_date = ld.max_date
+                    ORDER BY dc.subreddit
                 ''')
                 
                 rows = cur.fetchall()
+                logger.info(f"Found {len(rows)} subreddits in batch query")
+                
                 results = {row[0]: {
                     'comment_id': row[1],
                     'subreddit': row[0],
@@ -237,6 +246,9 @@ def get_comments_batch():
                     'recorded_date': row[8].isoformat() if row[8] else None
                 } for row in rows}
                 
+                # Log the number of results processed
+                logger.info(f"Processed {len(results)} subreddits for response")
+                
         finally:
             db_manager.return_connection(conn)
         
@@ -244,6 +256,7 @@ def get_comments_batch():
         return add_cache_headers(response)
     except Exception as e:
         logger.error(f"Error in batch comments: {str(e)}")
+        logger.exception("Full traceback:")  # This will log the full stack trace
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/weekly-trends')
