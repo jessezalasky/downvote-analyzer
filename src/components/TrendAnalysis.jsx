@@ -53,12 +53,13 @@ function TrendAnalysis() {
     const data = trends[subreddit] || [];
 
     const formattedData = data.map(item => ({
-        ...item,
-        date: new Date(item.date).toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
-        })
-      }));
+      ...item,
+      date: new Date(item.date).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }),
+      downvotes: Math.abs(item.downvotes)  // Convert negative to positive
+  }));
     
     return (
       <div key={subreddit} className={`${colors.bg.secondary} ${layout.card} p-6 mb-6`}>
@@ -83,10 +84,17 @@ function TrendAnalysis() {
                 stroke="#9CA3AF"  // Light gray text
                 tick={{ fill: '#9CA3AF' }}
               />
-              <YAxis 
-                stroke="#9CA3AF"
-                tick={{ fill: '#9CA3AF' }}
-              />        
+<YAxis 
+    stroke="#9CA3AF"
+    tick={{ fill: '#9CA3AF' }}
+    tickFormatter={(value) => `-${value}`}  // Optional: add any formatting you want
+    label={{ 
+        value: 'Downvotes',
+        angle: -90,
+        position: 'insideLeft',
+        style: { fill: '#9CA3AF' }
+    }}
+/> 
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />      
               <Tooltip
                 contentStyle={{ 
