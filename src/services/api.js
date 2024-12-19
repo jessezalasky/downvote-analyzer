@@ -14,7 +14,7 @@ class ApiService {
         cache: 'default',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=86400', // 24 hours
+          'Cache-Control': 'public, max-age=600', // 24 hours
           'Pragma': 'cache'
         }
       });
