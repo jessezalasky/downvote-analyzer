@@ -119,7 +119,7 @@ init_db()
 logger.info("Database initialized")
 
 @app.route('/api/all-time-champion')
-@cache_with_timeout(86400)
+@cache_with_timeout(600)
 def get_champion():
     try:
         logger.info("Fetching all-time champion")
@@ -131,7 +131,7 @@ def get_champion():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/comments/<subreddit>')
-@cache_with_timeout(86400)
+@cache_with_timeout(600)
 def get_comments(subreddit):
     try:
         logger.info(f"Fetching comments for {subreddit}")
@@ -144,7 +144,7 @@ def get_comments(subreddit):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/all-time-subreddit-totals')
-@cache_with_timeout(86400)
+@cache_with_timeout(600)
 def all_time_subreddit_totals():
     try:
         logger.info("Fetching all-time subreddit totals")
@@ -156,7 +156,7 @@ def all_time_subreddit_totals():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/subreddit-totals')
-@cache_with_timeout(86400)
+@cache_with_timeout(600)
 def subreddit_totals():
     try:
         logger.info("Fetching subreddit totals")
@@ -196,7 +196,7 @@ def subreddit_totals():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/comments/batch')
-@cache_with_timeout(86400)
+@cache_with_timeout(600)
 def get_comments_batch():
     try:
         logger.info("Fetching batch comments for all subreddits")
@@ -260,7 +260,7 @@ def get_comments_batch():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/weekly-trends')
-@cache_with_timeout(86400)
+@cache_with_timeout(600)
 def weekly_trends():
     try:
         logger.info("Fetching weekly trends")
