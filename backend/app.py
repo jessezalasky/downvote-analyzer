@@ -16,6 +16,7 @@ from database import (
 )
 from config import config
 
+
 # Configure logging
 logger = logging.getLogger('app')
 logger.setLevel(logging.INFO)

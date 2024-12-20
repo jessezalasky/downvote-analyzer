@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 import ApiService from './services/api';
 import React from 'react';
+import ReactGA from "react-ga4";
 import AllTimeChampionCard from './components/AllTimeChampionCard';
 import CategorySection from './components/CategorySection';
 import TabNavigation from './components/TabNavigation';
 import SubredditTotals from './components/SubredditTotals';
 import AllTimeSubredditTotals from './components/AllTimeSubredditTotals';
 import TrendAnalysis from './components/TrendAnalysis';
-import { categoryMap, getAllSubreddits } from './categoryMap';
+import { categoryMap } from './categoryMap';
 import { colors, layout, typography } from './styles/design-tokens.js';
 
+// Initialize GA4 only in production
+if (import.meta.env.PROD) {
+  ReactGA.initialize("G-FV4MZB3THV");
+}
 
 function App() {
   const [categorizedComments, setCategorizedComments] = useState({});
@@ -20,50 +25,47 @@ function App() {
   const [subredditTotals, setSubredditTotals] = useState([]);
   const [allTimeTotals, setAllTimeTotals] = useState([]);
 
+  // Track initial page view
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      ReactGA.send({ hitType: "pageview", page: window.location.pathname });
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        
-        // Fetch champion
         const championResponse = await ApiService.getAllTimeChampion();
         setChampion(championResponse.champion);
 
-        // Fetch all-time totals
         const allTimeResponse = await ApiService.getAllTimeSubredditTotals();
         setAllTimeTotals(allTimeResponse.totals);
 
-// Initialize results object
-const results = {};
-Object.keys(categoryMap).forEach(category => {
-  results[category] = [];
-});
+        const results = {};
+        Object.keys(categoryMap).forEach(category => {
+          results[category] = [];
+        });
 
-// Fetch all comments in one batch request
-const batchCommentsResponse = await ApiService.getCommentsBatch();
+        const batchCommentsResponse = await ApiService.getCommentsBatch();
 
-// Categorize comments from batch response
-Object.entries(batchCommentsResponse.comments).forEach(([subreddit, comment]) => {
-  for (const [category, info] of Object.entries(categoryMap)) {
-    if (info.subreddits.includes(subreddit)) {
-      results[category].push(comment);
-      break;
-    }
-  }
-});
+        Object.entries(batchCommentsResponse.comments).forEach(([subreddit, comment]) => {
+          for (const [category, info] of Object.entries(categoryMap)) {
+            if (info.subreddits.includes(subreddit)) {
+              results[category].push(comment);
+              break;
+            }
+          }
+        });
 
-const subredditResponse = await ApiService.getSubredditTotals();
-console.log("All time totals response:", allTimeResponse);
-
-const mostRecentDate = subredditResponse.totals[0]?.recorded_date;
-const filteredTotals = mostRecentDate ? 
-    subredditResponse.totals.filter(total => total.recorded_date === mostRecentDate) : [];
-setSubredditTotals(filteredTotals);
-setAllTimeTotals(allTimeResponse.totals);  // Use the same response to set state
-
+        const subredditResponse = await ApiService.getSubredditTotals();
+        const mostRecentDate = subredditResponse.totals[0]?.recorded_date;
+        const filteredTotals = mostRecentDate ? 
+          subredditResponse.totals.filter(total => total.recorded_date === mostRecentDate) : [];
         
+        setSubredditTotals(filteredTotals);
+        setAllTimeTotals(allTimeResponse.totals);
 
-        // Sort comments within each category by score
         Object.keys(results).forEach(category => {
           results[category].sort((a, b) => a.score - b.score);
         });
@@ -120,12 +122,10 @@ setAllTimeTotals(allTimeResponse.totals);  // Use the same response to set state
   return (
     <div className={`min-h-screen ${colors.bg.primary} pt-8 pb-12`}>
       <div className={layout.container}>
-        {/* Header always at top */}
         <h1 className={`${typography.title} ${colors.text.primary} text-center mb-8`}>
           Reddit Downvote Analyzer
         </h1>
   
-        {/* Tab Navigation always second */}
         <div className="mb-8">
           <TabNavigation 
             activeView={activeView}
@@ -133,11 +133,9 @@ setAllTimeTotals(allTimeResponse.totals);  // Use the same response to set state
           />
         </div>
   
-        {/* Optional top cards based on view */}
         {activeView === 'categories' && <AllTimeChampionCard champion={champion}/>}
         {activeView === 'subreddits' && <AllTimeSubredditTotals totals={allTimeTotals} />}
   
-        {/* Dynamic Section Header */}
         <div className="mt-8 mb-8 text-center">
           <h2 className={`${typography.title} ${colors.text.primary} mb-2`}>
             {headerContent.title}
@@ -147,7 +145,6 @@ setAllTimeTotals(allTimeResponse.totals);  // Use the same response to set state
           </p>
         </div>
   
-        {/* Main Content Section */}
         <div className="mt-6">
           {activeView === 'categories' ? (
             <CategorySection 
@@ -160,84 +157,6 @@ setAllTimeTotals(allTimeResponse.totals);  // Use the same response to set state
             <SubredditTotals totals={subredditTotals} />
           )}
         </div>
-      </div>
-    </div>
-  );
-
-        
-        
-        {/* Tab Navigation First */}
-        <div className="mt-12">
-          <TabNavigation 
-            activeView={activeView}
-            onViewChange={setActiveView}
-          />
-        </div>
-
-        {/* Dynamic Section Header Below Tabs */}
-        <div className="mt-8 mb-8 text-center">
-          <h2 className={`${typography.title} ${colors.text.primary} mb-2`}>
-            {headerContent.title}
-          </h2>
-          <p className={`${typography.body} ${colors.text.secondary}`}>
-            {headerContent.description}
-          </p>
-        </div>
-
-        {/* Content Section */}
-        <div className="mt-6">
-          {activeView === 'categories' ? (
-            <CategorySection 
-              categories={categoryMap}
-              comments={categorizedComments}
-            />
-          ) : (
-            <SubredditTotals totals={subredditTotals} />
-          )}
-        </div>
-
-  if (loading) {
-    return (
-      <div className={`min-h-screen ${colors.bg.primary} p-4 flex items-center justify-center`}>
-        <div className={`${typography.title} ${colors.text.primary}`}>Loading comments...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`min-h-screen ${colors.bg.primary} p-4 flex items-center justify-center`}>
-        <div className={`${typography.title} ${colors.text.primary} text-red-500`}>{error}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`min-h-screen ${colors.bg.primary} pt-8`}>
-      <div className={layout.container}>
-        <h1 className={`${typography.title} ${colors.text.primary} text-center mb-8`}>
-          Reddit Downvote Analyzer
-        </h1>
-        
-        <AllTimeChampionCard champion={champion} />
-        
-        {/* Section Header */}
-        <div className="mb-8 mt-12 text-center">
-          <div className="mb-4">
-            <h2 className={`${typography.title} ${colors.text.primary} mb-2`}>
-              Daily Downvoted by Category
-            </h2>
-          </div>
-          <p className={`${typography.body} ${colors.text.secondary}`}>
-            Check out the most downvoted comments in the last 24 hours in the most popular subreddits!
-          </p>
-        </div>
-
-        {/* Add after the section header div */}
-        <TabNavigation 
-          activeView={activeView}
-          onViewChange={setActiveView}
-        />
       </div>
     </div>
   );
