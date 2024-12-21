@@ -132,6 +132,8 @@ def main():
         # Force an immediate run for testing
         logger.info("Running initial collection immediately for testing")
         run_collection()
+
+        # Try
         
         logger.info("Entering main scheduler loop")
         while True:
