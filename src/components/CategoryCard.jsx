@@ -38,7 +38,7 @@ function CategoryCard({
       {/* Main Content */}
       <div className="flex gap-4 my-4 min-w-0 flex-1 overflow-hidden">
         <div className="flex-shrink-0 flex items-center justify-center w-16">
-          <span className={`${typography.score} ${colors.score.primary}`}>
+          <span className={`${typography.score} ${colors.score.primary} font-mono`}>
             {worstComment.score}
           </span>
         </div>
