@@ -209,12 +209,8 @@ def get_comments_batch():
                 # Log the query execution
                 logger.info("Executing batch query for all subreddits")
                 
+                # Modified query to only get today's comments
                 cur.execute('''
-                    WITH latest_dates AS (
-                        SELECT subreddit, MAX(recorded_date) as max_date
-                        FROM daily_champions
-                        GROUP BY subreddit
-                    )
                     SELECT 
                         dc.subreddit,
                         dc.comment_id,
@@ -226,9 +222,7 @@ def get_comments_batch():
                         dc.created_utc,
                         dc.recorded_date
                     FROM daily_champions dc
-                    INNER JOIN latest_dates ld 
-                        ON dc.subreddit = ld.subreddit 
-                        AND dc.recorded_date = ld.max_date
+                    WHERE DATE(dc.recorded_date) = CURRENT_DATE
                     ORDER BY dc.subreddit
                 ''')
                 
