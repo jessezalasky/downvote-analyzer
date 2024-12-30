@@ -26,6 +26,7 @@ function CategoryCard({
       flex 
       flex-col 
       justify-between
+      overflow-hidden
     `}>
       {/* Header */}
       <div>
@@ -35,17 +36,30 @@ function CategoryCard({
       </div>
 
       {/* Main Content */}
-      <div className="flex gap-4 my-4">
-        <div className="flex items-center justify-center w-16">
+      <div className="flex gap-4 my-4 min-w-0 flex-1 overflow-hidden">
+        <div className="flex-shrink-0 flex items-center justify-center w-16">
           <span className={`${typography.score} ${colors.score.primary}`}>
             {worstComment.score}
           </span>
         </div>
-        <div className="flex-1">
-          <p className={`${typography.body} ${colors.text.secondary} line-clamp-3`}>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <p className={`
+            ${typography.body} 
+            ${colors.text.secondary} 
+            line-clamp-3
+            break-words
+            overflow-hidden
+            text-ellipsis
+          `}>
             {worstComment.body}
           </p>
-          <span className={`${typography.small} ${colors.text.muted} mt-2 block`}>
+          <span className={`
+            ${typography.small} 
+            ${colors.text.muted} 
+            mt-2 
+            block
+            truncate
+          `}>
             {worstComment.subreddit ? `Worst Today: r/${worstComment.subreddit}` : 'No comments today'}
           </span>
         </div>
