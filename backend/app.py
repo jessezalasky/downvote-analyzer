@@ -202,15 +202,15 @@ def get_comments_batch():
     try:
         logger.info("Fetching batch comments for all subreddits")
         conn = db_manager.get_connection()
-        results = {}
         
         try:
             with conn.cursor() as cur:
-                # Log the query execution
-                logger.info("Executing batch query for all subreddits")
-                
-                # Modified query to only get today's comments
+                # First try to get today's comments
                 cur.execute('''
+                    WITH latest_date AS (
+                        SELECT MAX(recorded_date) as max_date
+                        FROM daily_champions
+                    )
                     SELECT 
                         dc.subreddit,
                         dc.comment_id,
@@ -222,12 +222,10 @@ def get_comments_batch():
                         dc.created_utc,
                         dc.recorded_date
                     FROM daily_champions dc
-                    WHERE DATE(dc.recorded_date) = CURRENT_DATE
-                    ORDER BY dc.subreddit
+                    WHERE dc.recorded_date = (SELECT max_date FROM latest_date)
                 ''')
                 
                 rows = cur.fetchall()
-                logger.info(f"Found {len(rows)} subreddits in batch query")
                 
                 results = {row[0]: {
                     'comment_id': row[1],
@@ -241,17 +239,15 @@ def get_comments_batch():
                     'recorded_date': row[8].isoformat() if row[8] else None
                 } for row in rows}
                 
-                # Log the number of results processed
-                logger.info(f"Processed {len(results)} subreddits for response")
-                
         finally:
             db_manager.return_connection(conn)
         
         response = make_response(jsonify({'comments': results}))
         return add_cache_headers(response)
+        
     except Exception as e:
         logger.error(f"Error in batch comments: {str(e)}")
-        logger.exception("Full traceback:")  # This will log the full stack trace
+        logger.exception("Full traceback:")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/weekly-trends')
